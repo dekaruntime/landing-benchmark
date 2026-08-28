@@ -12,14 +12,15 @@ OHA="${OHA:-oha}"
 DEKA="${DEKA:-deka}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-for tool in "$OHA" node bun; do
+for tool in "$OHA" node bun deno; do
   command -v "$tool" >/dev/null 2>&1 || { echo "missing: $tool"; exit 1; }
 done
 command -v "$DEKA" >/dev/null 2>&1 || { echo "missing: deka (set DEKA=/path/to/deka)"; exit 1; }
 
 CORES=$( (nproc 2>/dev/null) || sysctl -n hw.ncpu )
 cleanup() { pkill -f "servers/node.mjs" 2>/dev/null; pkill -f "servers/node-cluster.mjs" 2>/dev/null
-            pkill -f "servers/bun" 2>/dev/null; pkill -f "$DEKA serve" 2>/dev/null; }
+            pkill -f "servers/bun" 2>/dev/null; pkill -f "servers/deno.js" 2>/dev/null
+            pkill -f "$DEKA serve" 2>/dev/null; }
 trap cleanup EXIT
 cleanup; sleep 1
 
@@ -38,7 +39,7 @@ measure() {
 
 echo "host   : $( (sysctl -n machdep.cpu.brand_string 2>/dev/null) || grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- ), ${CORES} cores"
 echo "load   : $(uptime | sed 's/.*averages*: //')"
-echo "node   : $(node --version)   bun: $(bun --version)   deka: $("$DEKA" --version 2>/dev/null | head -1)"
+echo "node   : $(node --version)   bun: $(bun --version)   deno: $(deno --version 2>/dev/null | head -1)   deka: $("$DEKA" --version 2>/dev/null | head -1)"
 echo "oha    : $("$OHA" --version)"
 echo "params : ${CONN} connections, ${DUR} per run, median of ${RUNS}, ${WARMUP} warmup discarded"
 echo
@@ -52,7 +53,12 @@ if [ "$MODE" = default ] || [ "$MODE" = all ]; then
   bun "$HERE/servers/bun.js" & sleep 3
   measure "Bun"   3012 "one event loop (default)"; cleanup; sleep 1
 
-  ( cd "$HERE/.deka-project" && "$DEKA" serve --port 3010 >/dev/null 2>&1 ) & sleep 14
+  deno run --allow-net "$HERE/servers/deno.js" & sleep 4
+  measure "Deno"  3015 "one event loop (default)"; cleanup; sleep 1
+
+  # deka's default compiler (v2) cannot serve on 0.34.0 -- see deka#330.
+  # DEKA_COMPILER is overridable so this line can go once v2 serves.
+  ( cd "$HERE/.deka-project" && DEKA_COMPILER="${DEKA_COMPILER:-v1}" "$DEKA" serve --port 3010 >/dev/null 2>&1 ) & sleep 14
   measure "deka"  3010 "one loop per core (default)"; cleanup; sleep 1
 fi
 

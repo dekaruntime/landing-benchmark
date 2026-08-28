@@ -8,13 +8,13 @@ the real runtime, and `run.sh` only starts and stops things.
 ## What it measures
 
 The cheapest possible request — `GET /` returning the string `hello` over plain
-HTTP, no framework, no routing, no JSON — on Node, Bun and deka. That isolates
+HTTP, no framework, no routing, no JSON — on Node, Bun, Deno and deka. That isolates
 the runtime's request path, which is the thing being compared. It is not a
 measure of how fast your application will be.
 
 ## Why the default configuration
 
-Node and Bun each run a **single event loop** unless you opt into more. Using
+Node, Bun and Deno each run a **single event loop** unless you opt into more. Using
 the rest of the machine means a cluster module, `reusePort`, or a process
 manager in front. deka starts **one event loop per core** with no configuration.
 
@@ -25,10 +25,11 @@ win by omission is not worth publishing.
 
 ## Running it
 
-Needs [`oha`](https://github.com/hatoo/oha), `node`, `bun`, and `deka`.
+Needs [`oha`](https://github.com/hatoo/oha), `node`, `bun`, `deno`, and `deka`.
 
 ```sh
 brew install oha        # or: cargo install oha
+curl -fsSL https://deno.land/install.sh | sh
 curl -fsSL https://deka.gg/install.sh | sh
 
 git clone https://github.com/dekaruntime/landing-benchmark
