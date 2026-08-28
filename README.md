@@ -1,4 +1,4 @@
-# benchmark
+# landing-benchmark
 
 Reproduction kit for the throughput comparison on [deka.gg](https://deka.gg).
 
@@ -31,8 +31,8 @@ Needs [`oha`](https://github.com/hatoo/oha), `node`, `bun`, and `deka`.
 brew install oha        # or: cargo install oha
 curl -fsSL https://deka.gg/install.sh | sh
 
-git clone https://github.com/dekaruntime/benchmark
-cd benchmark
+git clone https://github.com/dekaruntime/landing-benchmark
+cd landing-benchmark
 ./setup.sh              # creates the deka project (once)
 ./run.sh                # default configuration
 ./run.sh tuned          # Node cluster + Bun reusePort
